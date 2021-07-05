@@ -105,25 +105,240 @@ void printStudentTableFooter()
     printf("--------------------------------------------------------------\n\n");
 }
 
+// #################### Linked List ####################
+
+// Represents linked list node
+typedef struct StudentListNode StudentListNode;
+struct StudentListNode
+{
+    StudentInfo student;   // Node data (student info)
+    StudentListNode *next; // Points to next node or end (null ptr)
+};
+
+// Contains linked list info
+typedef struct StudentList
+{
+    size_t size;           // List size (nodes count)
+    StudentListNode *head; // Points to first node or end (null ptr)
+    StudentListNode *tail; // Points to last node or end (null ptr)
+} StudentList;
+
+// Initialize list
+void initList(StudentList *students)
+{
+    // Empty list
+    students->size = 0;
+    students->head = NULL;
+    students->tail = NULL;
+}
+
+// Adds student info to list (from head)
+void insertFirstListStudent(StudentList *students, const StudentInfo *student)
+{
+    // Create new head which points to old head [which can be end (null ptr)]
+    StudentListNode *newHead = (StudentListNode *)malloc(sizeof(StudentListNode));
+    newHead->student = *student;
+    newHead->next = students->head;
+
+    // Check if list is empty
+    if (students->size == 0)
+    {
+        // List is empty; Adjust tail to point to newly created head
+        students->tail = newHead;
+    }
+
+    // Point list head to newly created head
+    students->head = newHead;
+    students->size++;
+}
+
+// Adds student info to list (from tail)
+void insertLastListStudent(StudentList *students, StudentInfo *student)
+{
+    // Create new tail which points to end (null ptr)
+    StudentListNode *newTail = (StudentListNode *)malloc(sizeof(StudentListNode));
+    newTail->student = *student;
+    newTail->next = NULL;
+
+    // Check if list is empty
+    if (students->size == 0)
+    {
+        // List is empty; Adjust head to point to newly created tail
+        students->head = newTail;
+    }
+    else
+    {
+        // List is not empty; Point old tail to newly created tail
+        students->tail->next = newTail;
+    }
+
+    // Point list tail to newly created tail
+    students->tail = newTail;
+    students->size++;
+}
+
+// Adds student info to list at nth position
+void insertNthListStudent(StudentList *students, unsigned int index, StudentInfo *student)
+{
+    // Check if index is out of bounds
+    if (index > students->size)
+        return;
+
+    // Check insert from head
+    if (index == 0)
+    {
+        insertFirstListStudent(students, student);
+        return;
+    }
+
+    // Check insert from tail
+    if (index == students->size)
+    {
+        insertLastListStudent(students, student);
+        return;
+    }
+
+    // Get second node
+    size_t i = 1;
+    StudentListNode *prev = students->head;
+    StudentListNode *current = students->head->next;
+
+    // Iterate over list until end (null ptr)
+    while (current != NULL)
+    {
+        // Check index and count
+        if (i == index)
+        {
+            // Reached index; insert node
+
+            // Create new node which points to current node
+            StudentListNode *newNode = (StudentListNode *)malloc(sizeof(StudentListNode));
+            newNode->student = *student;
+            newNode->next = current;
+
+            // Point prev node to newly created node
+            prev->next = newNode;
+            students->size++;
+            return;
+        }
+
+        // Get next node
+        i++;
+        prev = current;
+        current = current->next;
+    }
+}
+
+// Prints all students in list
+void printListStudents(StudentList *students)
+{
+    // Print Title
+    printf("[Students List]\n");
+
+    // Check if list is empty
+    if (students->size == 0)
+    {
+        // List is empty
+        printf("List is empty!\n\n");
+        return;
+    }
+
+    // Print table header
+    printStudentTableHeader();
+
+    // Get first node
+    StudentListNode *current = students->head;
+
+    // Iterate over list until end (null ptr)
+    while (current != NULL)
+    {
+        // Print student
+        printStudentTable(&current->student);
+
+        // Get next node
+        current = current->next;
+    }
+
+    // Print table footer
+    printStudentTableFooter();
+}
+
+void destroyList(StudentList *students)
+{
+    // Get first node
+    StudentListNode *temp = NULL;
+    StudentListNode *current = students->head;
+
+    // Iterate over list until end (null ptr)
+    while (current != NULL)
+    {
+        // Get next node
+        temp = current;
+        current = current->next;
+
+        // Delete node
+        free(temp);
+    }
+}
+
 int main()
 {
     // ############ Welcome Text ############
     printf("############### Welcome ###############\n\n");
 
-    // Create student 1
-    StudentInfo student1;
-    fillStudent(&student1);
-    printStudent(&student1);
+    // Get number of students
+    int N;
+    printf("Enter N (number of students): ");
+    scanf("%d", &N);
+    printf("\n");
 
-    // Create student 2
-    StudentInfo student2;
-    fillStudent(&student2);
-    printStudent(&student2);
+    // ########## Linked List Demo ##########
+    printf("########## Linked List Demo ###########\n\n");
 
-    // Print student table
-    printStudentTableHeader();
-    printStudentTable(&student1);
-    printStudentTable(&student2);
-    printStudentTableFooter();
+    // Create student list
+    StudentList studentList;
+    initList(&studentList);
+
+    // Add N random students to list
+    for (size_t i = 0; i < N; i++)
+    {
+        StudentInfo listStudent;
+        fillRandomStudent(&listStudent);
+        insertFirstListStudent(&studentList, &listStudent);
+    }
+
+    // Print list students
+    printListStudents(&studentList);
+
+    // Insert student at first demo
+    printf("[Insert First Demo]\n");
+    StudentInfo firstListStudent;
+    fillStudent(&firstListStudent);
+    insertFirstListStudent(&studentList, &firstListStudent);
+
+    // Print list students
+    printListStudents(&studentList);
+
+    // Insert student at last demo
+    printf("[Insert Last Demo]\n");
+    StudentInfo lastListStudent;
+    fillStudent(&lastListStudent);
+    insertLastListStudent(&studentList, &lastListStudent);
+
+    // Print list students
+    printListStudents(&studentList);
+
+    // Insert student at middle demo
+    printf("[Insert Middle Demo]\n");
+    StudentInfo middleListStudent;
+    fillStudent(&middleListStudent);
+    insertNthListStudent(&studentList, studentList.size / 2, &middleListStudent);
+
+    // Print list students
+    printListStudents(&studentList);
+
+    // Destroy list
+    destroyList(&studentList);
+
     return 0;
 }
