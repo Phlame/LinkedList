@@ -2,6 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+// ###################### Utility ######################
+
+// Flushes input stream (used for getch, gets)
+void flushInput()
+{
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF)
+        /* ignore */;
+}
+
 // ###################### Student ######################
 
 // Contains date info
@@ -28,9 +38,7 @@ void fillStudent(StudentInfo *student)
     scanf("%d", &student->id);
 
     // Flush input
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF)
-        /* ignore */;
+    flushInput();
 
     printf("Enter Name: ");
     fgets(student->name, sizeof(student->name), stdin);
@@ -288,6 +296,155 @@ void destroyList(StudentList *students)
     }
 }
 
+// #################### Dynamic Array ####################
+
+// Contains dynamic array info
+typedef struct StudentArray
+{
+    StudentInfo *array; // Pointer to first student (contiguous)
+    size_t size;        // Array size
+} StudentArray;
+
+// Initialize array
+void initArray(StudentArray *students)
+{
+    // Empty array
+    students->array = NULL;
+    students->size = 0;
+}
+
+// Adds student info to array (from start)
+void insertFirstArrayStudent(StudentArray *students, const StudentInfo *student)
+{
+    // Create new array
+    size_t newSize = students->size + 1;
+    StudentInfo *temp = (StudentInfo *)malloc(newSize * sizeof(StudentInfo));
+
+    // Check if array is empty
+    if (students->size != 0)
+    {
+        // Copy old data (0:end) --> (1:end+1)
+        memcpy(temp + 1, students->array, students->size * sizeof(StudentInfo));
+
+        // Remove old array
+        free(students->array);
+    }
+
+    // Replace old array
+    students->array = temp;
+
+    // Set first element
+    students->array[0] = *student;
+    students->size = newSize;
+}
+
+// Adds student info to array (from end)
+void insertLastArrayStudent(StudentArray *students, const StudentInfo *student)
+{
+    // Create new array
+    size_t newSize = students->size + 1;
+    StudentInfo *temp = (StudentInfo *)malloc(newSize * sizeof(StudentInfo));
+
+    // Check if array is empty
+    if (students->size != 0)
+    {
+        // Copy old data (0:end) --> (0:end)
+        memcpy(temp, students->array, students->size * sizeof(StudentInfo));
+
+        // Remove old array
+        free(students->array);
+    }
+
+    // Replace old array
+    students->array = temp;
+
+    // Set last element
+    students->array[students->size] = *student;
+    students->size = newSize;
+}
+
+// Adds student info to array at nth position (from start)
+void insertNthArrayStudent(StudentArray *students, unsigned int index, const StudentInfo *student)
+{
+    // Check if index is out of bounds
+    if (index > students->size)
+        return;
+
+    // Check insert from head
+    if (index == 0)
+    {
+        insertFirstArrayStudent(students, student);
+        return;
+    }
+
+    // Check insert from tail
+    if (index == students->size)
+    {
+        insertLastArrayStudent(students, student);
+        return;
+    }
+
+    // !! Size can't equal zero (array isn't NULL)
+
+    // Create new array
+    size_t newSize = students->size + 1;
+    StudentInfo *temp = (StudentInfo *)malloc(newSize * sizeof(StudentInfo));
+
+    // Copy old data (0:index-1) --> (0:index-1)
+    memcpy(temp, students->array, index * sizeof(StudentInfo));
+    // Copy old data (index:end) --> (index+1:end+1)
+    memcpy(temp + index + 1, students->array + index, (students->size - index) * sizeof(StudentInfo));
+
+    // Remove and replace old array
+    free(students->array);
+    students->array = temp;
+
+    // Set element at index
+    students->array[index] = *student;
+    students->size = newSize;
+}
+
+// Prints all students in array
+void printArrayStudents(const StudentArray *students)
+{
+    // Print Title
+    printf("[Students Array]\n");
+
+    // Check if array is empty
+    if (students->size == 0)
+    {
+        // Array is empty
+        printf("Array is empty!\n\n");
+        return;
+    }
+
+    // Print table header
+    printStudentTableHeader();
+
+    // Iterate over array
+    for (size_t i = 0; i < students->size; i++)
+    {
+        // Print student
+        printStudentTable(&students->array[i]);
+    }
+
+    // Print table footer
+    printStudentTableFooter();
+}
+
+void destroyArray(StudentArray *students)
+{
+    // Save array
+    StudentInfo *temp = students->array;
+
+    // Reset array
+    students->array = NULL;
+    students->size = 0;
+
+    // Remove array
+    free(temp);
+}
+
 int main()
 {
     // ############ Welcome Text ############
@@ -298,6 +455,12 @@ int main()
     printf("Enter N (number of students): ");
     scanf("%d", &N);
     printf("\n");
+
+    // ########################################
+
+    printf("Press ENTER to start linked list demo.");
+    flushInput();
+    getchar();
 
     // ########## Linked List Demo ##########
     printf("########## Linked List Demo ###########\n\n");
@@ -346,6 +509,60 @@ int main()
 
     // Destroy list
     destroyList(&studentList);
+
+    // ########################################
+
+    printf("Press ENTER to start dynamic array demo.");
+    flushInput();
+    getchar();
+
+    // ########## Dynamic Array Demo ##########
+    printf("########## Dynamic Array Demo ###########\n\n");
+
+    // Create student array
+    StudentArray studentArray;
+    initArray(&studentArray);
+
+    // Add N random students to array
+    for (size_t i = 0; i < N; i++)
+    {
+        StudentInfo arrayStudent;
+        fillRandomStudent(&arrayStudent);
+        insertFirstArrayStudent(&studentArray, &arrayStudent);
+    }
+
+    // Print array students
+    printArrayStudents(&studentArray);
+
+    // Insert student at first demo
+    printf("[Insert First Demo]\n");
+    StudentInfo firstArrayStudent;
+    fillStudent(&firstArrayStudent);
+    insertFirstArrayStudent(&studentArray, &firstArrayStudent);
+
+    // Print array students
+    printArrayStudents(&studentArray);
+
+    // Insert student at last demo
+    printf("[Insert Last Demo]\n");
+    StudentInfo lastArrayStudent;
+    fillStudent(&lastArrayStudent);
+    insertLastArrayStudent(&studentArray, &lastArrayStudent);
+
+    // Print array students
+    printArrayStudents(&studentArray);
+
+    // Insert student at middle demo
+    printf("[Insert Middle Demo]\n");
+    StudentInfo middleArrayStudent;
+    fillStudent(&middleArrayStudent);
+    insertNthArrayStudent(&studentArray, studentArray.size / 2, &middleArrayStudent);
+
+    // Print array students
+    printArrayStudents(&studentArray);
+
+    // Destroy array
+    destroyArray(&studentArray);
 
     return 0;
 }
