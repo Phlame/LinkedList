@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
+#define BENCHMARK
 
 // ###################### Utility ######################
 
@@ -10,6 +13,29 @@ void flushInput()
     int c;
     while ((c = getchar()) != '\n' && c != EOF)
         /* ignore */;
+}
+
+const char *timerName; // Timer name (task name)
+float startTime;       // Start time of timer
+// Start timer
+void startTimer(const char *name)
+{
+    // Save timer name
+    timerName = name;
+
+    // Record start time
+    startTime = (float)clock() / CLOCKS_PER_SEC;
+}
+
+// End timer and prints elapsed time
+void endTimer()
+{
+    // Record end time and calculate delta time
+    float endTime = (float)clock() / CLOCKS_PER_SEC;
+    float deltaTime = endTime - startTime;
+
+    // Print delta time
+    printf("%s: %.2f ms\n", timerName, deltaTime * 1e3);
 }
 
 // ###################### Student ######################
@@ -306,11 +332,21 @@ typedef struct StudentArray
 } StudentArray;
 
 // Initialize array
-void initArray(StudentArray *students)
+void initArray(StudentArray *students, size_t initSize)
 {
     // Empty array
     students->array = NULL;
     students->size = 0;
+
+    // Check if init size is not zero
+    if (initSize != 0)
+    {
+        // Create array with N elements
+        size_t newSize = initSize;
+        StudentInfo *temp = (StudentInfo *)malloc(newSize * sizeof(StudentInfo));
+        students->array = temp;
+        students->size = newSize;
+    }
 }
 
 // Adds student info to array (from start)
@@ -445,15 +481,129 @@ void destroyArray(StudentArray *students)
     free(temp);
 }
 
+// #################### Benchmark ###################
+
+// Runs different tests on a list
+void benchmarkList(unsigned int N)
+{
+    StudentInfo listStudent;
+
+    // Create student list
+    StudentList studentList;
+    initList(&studentList);
+
+    // Add N random students to list
+    for (size_t i = 0; i < N; i++)
+    {
+        fillRandomStudent(&listStudent);
+        insertFirstListStudent(&studentList, &listStudent);
+    }
+
+    // Memory size benchmark
+    unsigned int structSize = sizeof(StudentList) + studentList.size * sizeof(StudentListNode);
+    printf("Struct Size: %u Bytes\n", structSize);
+    printf("Node Size: %u Bytes\n", sizeof(StudentListNode));
+
+    // Insert student at first benchmark
+    startTimer("Insert First");
+    fillRandomStudent(&listStudent);
+    insertFirstListStudent(&studentList, &listStudent);
+    endTimer();
+
+    // Insert student at last benchmark
+    startTimer("Insert Last");
+    fillRandomStudent(&listStudent);
+    insertLastListStudent(&studentList, &listStudent);
+    endTimer();
+
+    // Insert student at middle benchmark
+    startTimer("Insert Middle");
+    fillRandomStudent(&listStudent);
+    insertNthListStudent(&studentList, studentList.size / 2, &listStudent);
+    endTimer();
+
+    // Destroy list
+    destroyList(&studentList);
+}
+
+// Runs different tests on an array
+void benchmarkArray(unsigned int N)
+{
+    StudentInfo arrayStudent;
+
+    // Create student array
+    StudentArray studentArray;
+    initArray(&studentArray, N);
+
+    // Add N random students to array
+    for (size_t i = 0; i < N; i++)
+        fillRandomStudent(&studentArray.array[i]);
+
+    // Memory size benchmark
+    unsigned int structSize = sizeof(StudentArray) + studentArray.size * sizeof(StudentInfo);
+    printf("Struct Size: %u Bytes\n", structSize);
+
+    // Insert student at first benchmark
+    startTimer("Insert First");
+    fillRandomStudent(&arrayStudent);
+    insertFirstArrayStudent(&studentArray, &arrayStudent);
+    endTimer();
+
+    // Insert student at last benchmark
+    startTimer("Insert Last");
+    fillRandomStudent(&arrayStudent);
+    insertLastArrayStudent(&studentArray, &arrayStudent);
+    endTimer();
+
+    // Insert student at middle benchmark
+    startTimer("Insert Middle");
+    fillRandomStudent(&arrayStudent);
+    insertNthArrayStudent(&studentArray, studentArray.size / 2, &arrayStudent);
+    endTimer();
+
+    // Destroy array
+    destroyArray(&studentArray);
+}
+
 int main()
 {
     // ############ Welcome Text ############
     printf("############### Welcome ###############\n\n");
 
+    // ############# Benchmark ##############
+
+#ifdef BENCHMARK
+    printf("############ List Benchmark ###########\n\n");
+    printf("Small: [N = 100K]\n");
+    printf("-----------------\n");
+    benchmarkList(100000);
+    printf("\nMedium: [N = 1M]\n");
+    printf("----------------\n");
+    benchmarkList(1000000);
+    printf("\nLarge: [N = 10M]\n");
+    printf("----------------\n");
+    benchmarkList(10000000);
+
+    printf("\n############ Array Benchmark ##########\n\n");
+    printf("Small: [N = 100K]\n");
+    printf("-----------------\n");
+    benchmarkArray(100000);
+    printf("\nMedium: [N = 1M]\n");
+    printf("----------------\n");
+    benchmarkArray(1000000);
+    printf("\nLarge: [N = 10M]\n");
+    printf("----------------\n");
+    benchmarkArray(10000000);
+
+    printf("\n");
+#endif
+
+    // ########################################
+
     // Get number of students
-    int N;
+    unsigned int N;
     printf("Enter N (number of students): ");
-    scanf("%d", &N);
+    scanf("%u", &N);
     printf("\n");
 
     // ########################################
@@ -517,19 +667,15 @@ int main()
     getchar();
 
     // ########## Dynamic Array Demo ##########
-    printf("########## Dynamic Array Demo ###########\n\n");
+    printf("######### Dynamic Array Demo ##########\n\n");
 
     // Create student array
     StudentArray studentArray;
-    initArray(&studentArray);
+    initArray(&studentArray, N);
 
     // Add N random students to array
     for (size_t i = 0; i < N; i++)
-    {
-        StudentInfo arrayStudent;
-        fillRandomStudent(&arrayStudent);
-        insertFirstArrayStudent(&studentArray, &arrayStudent);
-    }
+        fillRandomStudent(&studentArray.array[i]);
 
     // Print array students
     printArrayStudents(&studentArray);
