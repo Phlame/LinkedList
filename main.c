@@ -118,18 +118,18 @@ struct StudentListNode
 // Contains linked list info
 typedef struct StudentList
 {
-    size_t size;           // List size (nodes count)
     StudentListNode *head; // Points to first node or end (null ptr)
     StudentListNode *tail; // Points to last node or end (null ptr)
+    size_t size;           // List size (nodes count)
 } StudentList;
 
 // Initialize list
 void initList(StudentList *students)
 {
     // Empty list
-    students->size = 0;
     students->head = NULL;
     students->tail = NULL;
+    students->size = 0;
 }
 
 // Adds student info to list (from head)
@@ -153,7 +153,7 @@ void insertFirstListStudent(StudentList *students, const StudentInfo *student)
 }
 
 // Adds student info to list (from tail)
-void insertLastListStudent(StudentList *students, StudentInfo *student)
+void insertLastListStudent(StudentList *students, const StudentInfo *student)
 {
     // Create new tail which points to end (null ptr)
     StudentListNode *newTail = (StudentListNode *)malloc(sizeof(StudentListNode));
@@ -177,8 +177,8 @@ void insertLastListStudent(StudentList *students, StudentInfo *student)
     students->size++;
 }
 
-// Adds student info to list at nth position
-void insertNthListStudent(StudentList *students, unsigned int index, StudentInfo *student)
+// Adds student info to list at nth position (from head)
+void insertNthListStudent(StudentList *students, unsigned int index, const StudentInfo *student)
 {
     // Check if index is out of bounds
     if (index > students->size)
@@ -197,6 +197,8 @@ void insertNthListStudent(StudentList *students, unsigned int index, StudentInfo
         insertLastListStudent(students, student);
         return;
     }
+
+    // !! Size can't equal zero (head isn't NULL nor tail)
 
     // Get second node
     size_t i = 1;
@@ -230,7 +232,7 @@ void insertNthListStudent(StudentList *students, unsigned int index, StudentInfo
 }
 
 // Prints all students in list
-void printListStudents(StudentList *students)
+void printListStudents(const StudentList *students)
 {
     // Print Title
     printf("[Students List]\n");
@@ -268,6 +270,11 @@ void destroyList(StudentList *students)
     // Get first node
     StudentListNode *temp = NULL;
     StudentListNode *current = students->head;
+
+    // Reset list
+    students->head = NULL;
+    students->tail = NULL;
+    students->size = 0;
 
     // Iterate over list until end (null ptr)
     while (current != NULL)
