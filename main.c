@@ -608,7 +608,7 @@ int main()
 
     // ########################################
 
-    printf("Press ENTER to start linked list demo.");
+    printf("Press ENTER to start linked list demo...");
     flushInput();
     getchar();
 
@@ -662,7 +662,7 @@ int main()
 
     // ########################################
 
-    printf("Press ENTER to start dynamic array demo.");
+    printf("Press ENTER to start dynamic array demo...");
     flushInput();
     getchar();
 
@@ -709,6 +709,12 @@ int main()
 
     // Destroy array
     destroyArray(&studentArray);
+
+    // ########################################
+
+    printf("Press ENTER to exit...");
+    flushInput();
+    getchar();
 
     return 0;
 }
