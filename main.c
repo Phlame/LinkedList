@@ -84,12 +84,12 @@ void fillStudent(StudentInfo *student)
 void fillRandomStudent(StudentInfo *student)
 {
     typedef const char *str;
-    static const str firstNames[] = {"Adham", "Ali", "Ibrahim"};
-    static const str lastNames[] = {"Mohamed", "Medhat", "Nader"};
+    static const str FIRST_NAMES[] = {"Adham", "Ali", "Ibrahim"};
+    static const str LAST_NAMES[] = {"Mohamed", "Medhat", "Nader"};
 
-    str firstName = firstNames[rand() % 3];
+    str firstName = FIRST_NAMES[rand() % 3];
     size_t firstNameLength = strlen(firstName);
-    str lastName = lastNames[rand() % 3];
+    str lastName = LAST_NAMES[rand() % 3];
     size_t lastNameLength = strlen(lastName);
 
     memcpy(student->name, firstName, firstNameLength * sizeof(char));
