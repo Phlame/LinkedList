@@ -7,7 +7,9 @@
 
 // ###################### Utility ######################
 
-// Flushes input stream (used for getch, gets)
+#define STR_SIZ 25
+
+// Flushes input stream (used after scanf and before getchar, gets)
 void flushInput()
 {
     int c;
@@ -15,27 +17,36 @@ void flushInput()
         /* ignore */;
 }
 
-const char *timerName; // Timer name (task name)
-float startTime;       // Start time of timer
-// Start timer
-void startTimer(const char *name)
+// Accepts line from input stream
+void inputLine(char *str)
 {
-    // Save timer name
-    timerName = name;
+    fgets(str, STR_SIZ, stdin);
+    str[strcspn(str, "\n")] = '\0';
+}
 
+// Waits for enter to continue
+void waitForEnter()
+{
+    getchar();
+}
+
+float startTime; // Start time of timer
+// Starts timer
+void startTimer()
+{
     // Record start time
     startTime = (float)clock() / CLOCKS_PER_SEC;
 }
 
-// End timer and prints elapsed time
-void endTimer()
+// Ends timer and returns elapsed time in ms
+float endTimer()
 {
     // Record end time and calculate delta time
     float endTime = (float)clock() / CLOCKS_PER_SEC;
     float deltaTime = endTime - startTime;
 
-    // Print delta time
-    printf("%s: %.2f ms\n", timerName, deltaTime * 1e3);
+    // Return delta time
+    return deltaTime * 1e3;
 }
 
 // ###################### Student ######################
@@ -52,7 +63,7 @@ typedef struct Date
 typedef struct StudentInfo
 {
     int id;
-    char name[25];
+    char name[STR_SIZ];
     Date birthDate;
     int score;
 } StudentInfo;
@@ -62,13 +73,10 @@ void fillStudent(StudentInfo *student)
 {
     printf("Enter ID: ");
     scanf("%d", &student->id);
-
-    // Flush input
     flushInput();
 
     printf("Enter Name: ");
-    fgets(student->name, sizeof(student->name), stdin);
-    student->name[strcspn(student->name, "\n")] = '\0';
+    inputLine(student->name);
 
     printf("Enter Birth Date (Day Month Year): ");
     scanf("%d", &student->birthDate.day);
@@ -77,6 +85,7 @@ void fillStudent(StudentInfo *student)
 
     printf("Enter Score: ");
     scanf("%d", &student->score);
+    flushInput();
     printf("\n");
 }
 
@@ -84,12 +93,14 @@ void fillStudent(StudentInfo *student)
 void fillRandomStudent(StudentInfo *student)
 {
     typedef const char *str;
-    static const str FIRST_NAMES[] = {"Adham", "Ali", "Ibrahim"};
-    static const str LAST_NAMES[] = {"Mohamed", "Medhat", "Nader"};
+    static const str FIRST_NAMES[] = {"Adham", "Ali", "Ibrahim", "Fadi", "Nour",
+                                      "Mahmoud", "Thabet", "Salah", "Ziad", "Sayed"};
+    static const str LAST_NAMES[] = {"Mohamed", "Medhat", "Nader", "Omar", "Maged",
+                                     "Ahmed", "Nasser", "Ehab", "Sherif", "Samy"};
 
-    str firstName = FIRST_NAMES[rand() % 3];
+    str firstName = FIRST_NAMES[rand() % (sizeof(FIRST_NAMES) / sizeof(str))];
     size_t firstNameLength = strlen(firstName);
-    str lastName = LAST_NAMES[rand() % 3];
+    str lastName = LAST_NAMES[rand() % (sizeof(LAST_NAMES) / sizeof(str))];
     size_t lastNameLength = strlen(lastName);
 
     memcpy(student->name, firstName, firstNameLength * sizeof(char));
@@ -157,7 +168,7 @@ typedef struct StudentList
     size_t size;           // List size (nodes count)
 } StudentList;
 
-// Initialize list
+// Initializes list
 void initList(StudentList *students)
 {
     // Empty list
@@ -299,6 +310,7 @@ void printListStudents(const StudentList *students)
     printStudentTableFooter();
 }
 
+// Destroys list
 void destroyList(StudentList *students)
 {
     // Get first node
@@ -331,7 +343,7 @@ typedef struct StudentArray
     size_t size;        // Array size
 } StudentArray;
 
-// Initialize array
+// Initializes array
 void initArray(StudentArray *students, size_t initSize)
 {
     // Empty array
@@ -468,6 +480,7 @@ void printArrayStudents(const StudentArray *students)
     printStudentTableFooter();
 }
 
+// Destroys array
 void destroyArray(StudentArray *students)
 {
     // Save array
@@ -505,22 +518,22 @@ void benchmarkList(unsigned int N)
     printf("Node Size: %u Bytes\n", sizeof(StudentListNode));
 
     // Insert student at first benchmark
-    startTimer("Insert First");
+    startTimer();
     fillRandomStudent(&listStudent);
     insertFirstListStudent(&studentList, &listStudent);
-    endTimer();
+    printf("Insert First: %.2f ms\n", endTimer());
 
     // Insert student at last benchmark
-    startTimer("Insert Last");
+    startTimer();
     fillRandomStudent(&listStudent);
     insertLastListStudent(&studentList, &listStudent);
-    endTimer();
+    printf("Insert Last: %.2f ms\n", endTimer());
 
     // Insert student at middle benchmark
-    startTimer("Insert Middle");
+    startTimer();
     fillRandomStudent(&listStudent);
     insertNthListStudent(&studentList, studentList.size / 2, &listStudent);
-    endTimer();
+    printf("Insert Middle: %.2f ms\n", endTimer());
 
     // Destroy list
     destroyList(&studentList);
@@ -544,22 +557,22 @@ void benchmarkArray(unsigned int N)
     printf("Struct Size: %u Bytes\n", structSize);
 
     // Insert student at first benchmark
-    startTimer("Insert First");
+    startTimer();
     fillRandomStudent(&arrayStudent);
     insertFirstArrayStudent(&studentArray, &arrayStudent);
-    endTimer();
+    printf("Insert First: %.2f ms\n", endTimer());
 
     // Insert student at last benchmark
-    startTimer("Insert Last");
+    startTimer();
     fillRandomStudent(&arrayStudent);
     insertLastArrayStudent(&studentArray, &arrayStudent);
-    endTimer();
+    printf("Insert Last: %.2f ms\n", endTimer());
 
     // Insert student at middle benchmark
-    startTimer("Insert Middle");
+    startTimer();
     fillRandomStudent(&arrayStudent);
     insertNthArrayStudent(&studentArray, studentArray.size / 2, &arrayStudent);
-    endTimer();
+    printf("Insert Middle: %.2f ms\n", endTimer());
 
     // Destroy array
     destroyArray(&studentArray);
@@ -567,6 +580,9 @@ void benchmarkArray(unsigned int N)
 
 int main()
 {
+    // Set random seed based on time
+    srand(time(NULL));
+
     // ############ Welcome Text ############
     printf("############### Welcome ###############\n\n");
 
@@ -604,13 +620,13 @@ int main()
     unsigned int N;
     printf("Enter N (number of students): ");
     scanf("%u", &N);
+    flushInput();
     printf("\n");
 
     // ########################################
 
     printf("Press ENTER to start linked list demo...");
-    flushInput();
-    getchar();
+    waitForEnter();
 
     // ########## Linked List Demo ##########
     printf("########## Linked List Demo ###########\n\n");
@@ -663,8 +679,7 @@ int main()
     // ########################################
 
     printf("Press ENTER to start dynamic array demo...");
-    flushInput();
-    getchar();
+    waitForEnter();
 
     // ########## Dynamic Array Demo ##########
     printf("######### Dynamic Array Demo ##########\n\n");
@@ -713,8 +728,7 @@ int main()
     // ########################################
 
     printf("Press ENTER to exit...");
-    flushInput();
-    getchar();
+    waitForEnter();
 
     return 0;
 }
