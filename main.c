@@ -358,10 +358,8 @@ void initArray(StudentArray *students, size_t initSize)
     if (initSize != 0)
     {
         // Create array with N elements
-        size_t newSize = initSize;
-        StudentInfo *temp = (StudentInfo *)malloc(newSize * sizeof(StudentInfo));
-        students->array = temp;
-        students->size = newSize;
+        students->size = initSize;
+        students->array = (StudentInfo *)malloc(students->size * sizeof(StudentInfo));
     }
 }
 
