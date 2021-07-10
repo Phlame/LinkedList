@@ -364,22 +364,13 @@ void initArray(StudentArray *students, size_t initSize)
 // Adds student info to array (from start)
 void insertFirstArrayStudent(StudentArray *students, const StudentInfo *student)
 {
-    // Create new array
+    // Reallocate new array
     size_t newSize = students->size + 1;
-    StudentInfo *temp = (StudentInfo *)malloc(newSize * sizeof(StudentInfo));
+    students->array = (StudentInfo *)realloc(students->array, newSize * sizeof(StudentInfo));
 
-    // Check if array is empty
-    if (students->size != 0)
-    {
-        // Copy old data (0:end) --> (1:end+1)
-        memcpy(temp + 1, students->array, students->size * sizeof(StudentInfo));
-
-        // Remove old array
-        free(students->array);
-    }
-
-    // Replace old array
-    students->array = temp;
+    // Shift elements starting from beggining
+    for (size_t i = students->size; i > 0; i--)
+        students->array[i] = students->array[i - 1];
 
     // Set first element
     students->array[0] = *student;
@@ -389,22 +380,9 @@ void insertFirstArrayStudent(StudentArray *students, const StudentInfo *student)
 // Adds student info to array (from end)
 void insertLastArrayStudent(StudentArray *students, const StudentInfo *student)
 {
-    // Create new array
+    // Reallocate new array
     size_t newSize = students->size + 1;
-    StudentInfo *temp = (StudentInfo *)malloc(newSize * sizeof(StudentInfo));
-
-    // Check if array is empty
-    if (students->size != 0)
-    {
-        // Copy old data (0:end) --> (0:end)
-        memcpy(temp, students->array, students->size * sizeof(StudentInfo));
-
-        // Remove old array
-        free(students->array);
-    }
-
-    // Replace old array
-    students->array = temp;
+    students->array = (StudentInfo *)realloc(students->array, newSize * sizeof(StudentInfo));
 
     // Set last element
     students->array[students->size] = *student;
@@ -432,20 +410,13 @@ void insertNthArrayStudent(StudentArray *students, unsigned int index, const Stu
         return;
     }
 
-    // !! Size can't equal zero (array isn't NULL)
-
-    // Create new array
+    // Reallocate new array
     size_t newSize = students->size + 1;
-    StudentInfo *temp = (StudentInfo *)malloc(newSize * sizeof(StudentInfo));
+    students->array = (StudentInfo *)realloc(students->array, newSize * sizeof(StudentInfo));
 
-    // Copy old data (0:index-1) --> (0:index-1)
-    memcpy(temp, students->array, index * sizeof(StudentInfo));
-    // Copy old data (index:end) --> (index+1:end+1)
-    memcpy(temp + index + 1, students->array + index, (students->size - index) * sizeof(StudentInfo));
-
-    // Remove and replace old array
-    free(students->array);
-    students->array = temp;
+    // Shift elements starting from index
+    for (size_t i = students->size; i > index; i--)
+        students->array[i] = students->array[i - 1];
 
     // Set element at index
     students->array[index] = *student;
